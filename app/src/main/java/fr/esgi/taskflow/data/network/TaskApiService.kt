@@ -8,6 +8,9 @@ interface TaskApiService {
     @GET("todos")
     suspend fun getAllTodos(): List<TaskDto>
 
+    @GET("users")
+    suspend fun getUsers(): List<UserDto>
+
 
     // GET ONE TASK BY ID ENDPOINT
 
