@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import fr.esgi.taskflow.navigation.HomeTab
@@ -21,6 +22,7 @@ fun HomeScreen(
     onSelectTab: (HomeTab) -> Unit,
     content: @Composable () -> Unit,
 ) {
+
     val title = when (selectedTab) {
         HomeTab.ALL -> "Toutes les tâches"
         HomeTab.CREATE -> "Créer une tâche"

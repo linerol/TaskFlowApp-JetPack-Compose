@@ -26,8 +26,11 @@ import fr.esgi.taskflow.ui.tasks.TaskViewModelFactory
 @Composable
 fun TaskFlowApp() {
     val navController = rememberNavController()
-    val repository = remember { RemoteTasksRepository(ApiClient.createTaskApiService()) }
-    val userRepository = remember { RemoteUserRepository(ApiClient.createTaskApiService()) }
+
+    val clientService = ApiClient.createTaskApiService()
+
+    val repository = remember { RemoteTasksRepository(clientService) }
+    val userRepository = remember { RemoteUserRepository(clientService) }
     val loginViewModel: LoginViewModel = viewModel(factory = remember(userRepository) { LoginViewModelFactory(userRepository) })
     val loginState = loginViewModel.state.collectAsStateWithLifecycle().value
     val taskViewModel: TaskViewModel = viewModel(
@@ -68,6 +71,7 @@ fun TaskFlowApp() {
         }
         composable(Destinations.ALL) {
             HomeScreen(selectedTab = HomeTab.ALL, onSelectTab = selectTab) {
+                LaunchedEffect(loginState.selectedUserId) { taskViewModel.getAll() }
                 TaskListScreen(
                     tasks,
                     openTask,

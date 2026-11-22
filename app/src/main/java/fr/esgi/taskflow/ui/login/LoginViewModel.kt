@@ -46,15 +46,13 @@ class LoginViewModel(private val users: UserRepository) : ViewModel() {
 
     fun login() {
         val selectedId = state.value.selectedUserId ?: return
+        val chosen = state.value.users.firstOrNull { it.id == selectedId }
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             try {
-                // Le clic renouvelle GET /users et valide le choix dans la réponse récente.
-                val fresh = users.refresh()
-                val chosen = fresh.firstOrNull { it.id == selectedId }
                 _state.update {
                     it.copy(
-                        users = fresh,
+                        users = state.value.users,
                         loading = false,
                         loggedInUser = chosen,
                         error = if (chosen == null) LoginError.SELECTION else null,

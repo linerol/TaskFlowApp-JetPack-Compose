@@ -32,6 +32,9 @@ class TaskViewModel(
         viewModelScope.launch {
             observeTasksUseCase().collect { tasks -> _uiState.update { it.copy(tasks = tasks) } }
         }
+    }
+
+    fun getAll() {
         viewModelScope.launch {
             getAllTodosUseCase()
         }
