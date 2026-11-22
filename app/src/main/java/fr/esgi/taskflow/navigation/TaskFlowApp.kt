@@ -1,6 +1,7 @@
 package fr.esgi.taskflow.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -11,9 +12,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import fr.esgi.taskflow.data.network.ApiClient
 import fr.esgi.taskflow.data.repository.RemoteTasksRepository
+import fr.esgi.taskflow.data.repository.RemoteUserRepository
 import fr.esgi.taskflow.ui.detail.TaskDetailScreen
 import fr.esgi.taskflow.ui.home.HomeScreen
 import fr.esgi.taskflow.ui.login.LoginScreen
+import fr.esgi.taskflow.ui.login.LoginViewModel
+import fr.esgi.taskflow.ui.login.LoginViewModelFactory
 import fr.esgi.taskflow.ui.tasks.CreateTaskScreen
 import fr.esgi.taskflow.ui.tasks.TaskListScreen
 import fr.esgi.taskflow.ui.tasks.TaskViewModel
@@ -23,6 +27,9 @@ import fr.esgi.taskflow.ui.tasks.TaskViewModelFactory
 fun TaskFlowApp() {
     val navController = rememberNavController()
     val repository = remember { RemoteTasksRepository(ApiClient.createTaskApiService()) }
+    val userRepository = remember { RemoteUserRepository(ApiClient.createTaskApiService()) }
+    val loginViewModel: LoginViewModel = viewModel(factory = remember(userRepository) { LoginViewModelFactory(userRepository) })
+    val loginState = loginViewModel.state.collectAsStateWithLifecycle().value
     val taskViewModel: TaskViewModel = viewModel(
         factory = remember(repository) {
             TaskViewModelFactory(repository)
@@ -30,6 +37,15 @@ fun TaskFlowApp() {
     )
 
     val tasks = taskViewModel.uiState.collectAsStateWithLifecycle().value.tasks
+
+    LaunchedEffect(loginState.loggedInUser?.id) {
+        if (loginState.loggedInUser != null) {
+            navController.navigate(Destinations.ALL) {
+                popUpTo(Destinations.LOGIN) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
 
     val openTask: (Int) -> Unit = { taskId -> navController.navigate(Destinations.detail(taskId)) }
@@ -43,12 +59,12 @@ fun TaskFlowApp() {
 
     NavHost(navController = navController, startDestination = Destinations.LOGIN) {
         composable(Destinations.LOGIN) {
-            LoginScreen(onLogin = {
-                navController.navigate(Destinations.ALL) {
-                    popUpTo(Destinations.LOGIN) { inclusive = true }
-                    launchSingleTop = true
-                }
-            })
+            LoginScreen(
+                state = loginState,
+                onSelectUser = loginViewModel::selectUser,
+                onLogin = loginViewModel::login,
+                onRetry = loginViewModel::loadUsers,
+            )
         }
         composable(Destinations.ALL) {
             HomeScreen(selectedTab = HomeTab.ALL, onSelectTab = selectTab) {
